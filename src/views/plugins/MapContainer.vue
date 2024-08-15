@@ -3,6 +3,9 @@ import { onMounted, onUnmounted } from "vue";
 import AMapLoader from "@amap/amap-jsapi-loader";
 import { ref } from 'vue'
 import { reactive } from 'vue';
+import { defineEmits } from 'vue';
+
+const emits = defineEmits(['listenGeo']);
 
 // 地图：ref响应式写法
 const map = ref(null);
@@ -17,7 +20,9 @@ const state = reactive({
   autoOptions : {
     city: 320115, // 江宁
     input: "tipinput"
-  }
+  },
+  latitude: null,
+  longitude: null,
 })
 
 const methods = {
@@ -40,11 +45,20 @@ const methods = {
       }
       if (status === 'complete') {
         methods.getGeoLocSuccess(result);
+        state.latitude = result.position.lat;
+        state.longitude = result.position.lng;
+        methods.sendGeoToParent(state.latitude, state.longitude);
       } else {
         methods.getGeoLocFailed(result);
       }
     });
   },
+
+  sendGeoToParent(latitude, longitude) {
+     const value = {"lat": latitude, "lng": longitude};
+     emits('listenGeo', value);
+     console.log(value);
+   }
 }
 
 onMounted(() => {

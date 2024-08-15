@@ -17,24 +17,16 @@
           <div class="wrap">
             <div class="formWrap">
               <a-form-item>
-                <a-input
-                  v-model:value="form.orderId"
-                  placeholder="请输入订单号"
-                />
+                <a-input v-model:value="form.orderId" placeholder="请输入订单号" />
               </a-form-item>
               <a-form-item>
-                <a-input
-                  v-model:value="form.province"
-                  placeholder="请输入省份"
-                />
+                <a-input v-model:value="form.province" placeholder="请输入省份" />
               </a-form-item>
               <a-form-item>
                 <a-input v-model:value="form.city" placeholder="请输入地区" />
               </a-form-item>
               <a-form-item>
-                <a-button type="primary" @click="fetchStores"
-                  >获取店铺</a-button
-                >
+                <a-button type="primary" @click="fetchStores">获取店铺</a-button>
               </a-form-item>
               <a-form-item>
                 <a-select placeholder="选择店铺">
@@ -59,7 +51,7 @@
               </a-form-item>
             </div>
             <div class="mapWrap">
-              <MapContainer />
+              <MapContainer @listenGeo = "listenGeoCallback"/>
             </div>
           </div>
         </a-form>
@@ -91,6 +83,7 @@
 <script>
 import MapContainer from "../views/plugins/MapContainer.vue";
 import QueryPage from "../views/QueryPage.vue";
+import cityJson from '../public/city.json'
 
 export default {
   components: {
@@ -104,13 +97,15 @@ export default {
       form: {
         orderId: "",
         province: "",
-        city: "",
+        provinceArr: [],
+        cityArr: [],
+        regionArr: [],
         store: "",
         product: "",
         quantity: "",
-        latitude: null,
-        longitude: null,
       },
+      latitude: null,
+      longitude: null,
     };
   },
   methods: {
@@ -130,8 +125,21 @@ export default {
       this.srcUrl =
         "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png";
     },
+    handleProvinceCityData() {
+      console.log(cityJson);
+      this.provinceArr = cityJson;
+      console.log(this.provinceArr.length);
+      console.log(cityJson.length);
+    },
+    listenGeoCallback(latitudeAndLongitude) {
+      this.latitude = latitudeAndLongitude.lat;
+      this.longitude = latitudeAndLongitude.lng;
+    }
+
   },
-  mounted() {},
+  mounted() { 
+    this.handleProvinceCityData();
+  },
 };
 </script>
 
@@ -168,14 +176,17 @@ h1 {
   border-radius: 5px;
   margin-top: 20px;
 }
+
 .wrap {
   width: 100%;
   display: flex;
   justify-content: space-around;
 }
+
 .formWrap {
   width: 55%;
 }
+
 .mapWrap {
   width: 40%;
   margin-left: 20px;
