@@ -17,21 +17,21 @@
           <div class="wrap">
             <div class="formWrap">
               <a-form-item>
-                <a-input v-model:value="form.orderId" placeholder="请输入订单号" />
-              </a-form-item>
-              <a-form-item>
-                <a-input v-model:value="form.province" placeholder="请输入省份" />
-              </a-form-item>
-              <a-form-item>
-                <a-input v-model:value="form.city" placeholder="请输入地区" />
-              </a-form-item>
-              <a-form-item>
-                <a-button type="primary" @click="fetchStores">获取店铺</a-button>
-              </a-form-item>
-              <a-form-item>
                 <a-select placeholder="选择店铺">
                   <a-select-option v-for="(store, index) in stores" :key="index" :value="store">{{store}}</a-select-option>
                 </a-select>
+              </a-form-item>
+              <a-form-item>
+                <a-input v-model:value="form.orderId" placeholder="请输入订单号" />
+              </a-form-item>
+              <a-form-item>
+                <a-input v-model:value="form.province" placeholder="省份" />
+              </a-form-item>
+              <a-form-item>
+                <a-input v-model:value="form.city" placeholder="详细地区：（xx市xx地方）距离店铺最最近的地方" />
+              </a-form-item>
+              <a-form-item>
+                <a-button type="primary" @click="fetchStoresByKeywords">获取店铺</a-button>
               </a-form-item>
               <a-form-item>
                 <a-select placeholder="选择产品">
@@ -84,6 +84,7 @@ import MapContainer from "../views/plugins/MapContainer.vue";
 import QueryPage from "../views/QueryPage.vue";
 import cityJson from '../public/city.json'
 import axios from 'axios';
+import { notification } from 'ant-design-vue';
 
 export default {
   components: {
@@ -97,21 +98,26 @@ export default {
       form: {
         orderId: "",
         province: "",
-        provinceArr: [],
-        cityArr: [],
-        regionArr: [],
+        city: "",
+        region: "",
+        bizName: "蜜雪冰城",
         store: "",
         product: "",
         quantity: "",
       },
       latitude: null,
       longitude: null,
-      stores: []
+      stores: [],
+      status: {
+        searchByAround: false, // 周边查询
+        searchByKeywords: false // 关键字查询
+      }
     };
   },
   methods: {
-          // 获取店铺逻辑
+    // 获取店铺逻辑
     async fetchStores() {
+      console.log(this.form);
         const url = 'https://restapi.amap.com/v5/place/around';
         const params = {
             key: '1378bc4448153d4852ef8815b90f15d8',
@@ -123,7 +129,29 @@ export default {
 
         try {
             const response = await axios.get(url, { params });
-            console.log("Fetching stores...");
+            let pois = response.data.pois;
+            this.stores = pois.map(poi => poi.name + "\n" + poi.address)
+            console.log(this.stores);
+            this.status.searchByAround = true;
+            this.showNotification(true, '获取店铺成功，请选择附近店铺');
+        } catch (error) {
+            console.error("Error fetching stores:", error);
+            this.showNotification(false, '获取店铺失败，请输入省市区域信息，再点击获取店铺按钮');
+        }
+    },
+
+    // 根据关键字搜索店铺
+    async fetchStoresByKeywords() {
+        const url = 'https://restapi.amap.com/v5/place/text';
+        const params = {
+            key: '1378bc4448153d4852ef8815b90f15d8',
+            keywords: this.form.province + this.form.city + this.form.region +this.form.bizName,
+            sortrule: 'distance',
+            offset: 20,
+        };
+
+        try {
+            const response = await axios.get(url, { params });
             console.log(response.data);
             let pois = response.data.pois;
             this.stores = pois.map(poi => poi.name + "\n" + poi.address)
@@ -132,6 +160,23 @@ export default {
             console.error("Error fetching stores:", error);
         }
     },
+
+    // 店铺获取成功提示
+    showNotification(success, msg) {
+      if (success) {
+        notification.success({
+          message: '成功',
+          description: msg,
+        });
+      } else {
+        notification.warning({
+          message: '提示',
+          description: msg,
+        })
+      }
+
+    },
+
     submitOrder() {
       // 下单逻辑
       console.log("Submitting order...");
