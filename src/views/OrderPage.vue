@@ -30,8 +30,7 @@
               </a-form-item>
               <a-form-item>
                 <a-select placeholder="选择店铺">
-                  <a-select-option value="store1">店铺1</a-select-option>
-                  <a-select-option value="store2">店铺2</a-select-option>
+                  <a-select-option v-for="(store, index) in stores" :key="index" :value="store">{{store}}</a-select-option>
                 </a-select>
               </a-form-item>
               <a-form-item>
@@ -84,6 +83,7 @@
 import MapContainer from "../views/plugins/MapContainer.vue";
 import QueryPage from "../views/QueryPage.vue";
 import cityJson from '../public/city.json'
+import axios from 'axios';
 
 export default {
   components: {
@@ -106,12 +106,31 @@ export default {
       },
       latitude: null,
       longitude: null,
+      stores: []
     };
   },
   methods: {
-    fetchStores() {
-      // 获取店铺逻辑
-      console.log("Fetching stores...");
+          // 获取店铺逻辑
+    async fetchStores() {
+        const url = 'https://restapi.amap.com/v5/place/around';
+        const params = {
+            key: '1378bc4448153d4852ef8815b90f15d8',
+            keywords: '蜜雪冰城',
+            location: this.longitude + "," + this.latitude,
+            sortrule: 'distance',
+            radius: 5000,
+        };
+
+        try {
+            const response = await axios.get(url, { params });
+            console.log("Fetching stores...");
+            console.log(response.data);
+            let pois = response.data.pois;
+            this.stores = pois.map(poi => poi.name + "\n" + poi.address)
+            console.log(this.stores);
+        } catch (error) {
+            console.error("Error fetching stores:", error);
+        }
     },
     submitOrder() {
       // 下单逻辑
@@ -134,6 +153,7 @@ export default {
     listenGeoCallback(latitudeAndLongitude) {
       this.latitude = latitudeAndLongitude.lat;
       this.longitude = latitudeAndLongitude.lng;
+      this.fetchStores();
     }
 
   },

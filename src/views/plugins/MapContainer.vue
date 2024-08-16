@@ -18,7 +18,7 @@ const state = reactive({
   placeSearch: null,// 地点搜索服务插件
   // 提示词补全配置
   autoOptions : {
-    city: 320115, // 江宁
+    city: 320105, // 建邺
     input: "tipinput"
   },
   latitude: null,
@@ -37,6 +37,7 @@ const methods = {
 
   getGeoLoc(init) {
     if (!init) {
+      console.log(1111);
       state.loading = true;
     }
     state.geolocation.getCurrentPosition((status, result) => {
@@ -87,7 +88,13 @@ onMounted(() => {
       AMap.plugin(["AMap.AutoComplete", "AMap.PlaceSearch"], () => {
         state.auto = new AMap.AutoComplete(state.autoOptions);
         state.placeSearch = new AMap.PlaceSearch({
-            map: map.value
+            map: map.value,
+            pageSize: 5, // 单页显示结果条数
+            pageIndex: 1, // 页码
+            city: "320115", // 兴趣点城市
+            citylimit: true,  //是否强制限制在设置的城市内搜索
+            panel: "panel", // 结果列表将在此容器中进行展示。
+            autoFitView: true // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
         });
         state.auto.on("select", select);
         function select(e) {
@@ -109,6 +116,7 @@ onUnmounted(() => {
 
 <template>
   <div id="container"></div>
+  <div id="panel"></div>
   <div id="myPageTop">
     <table>
         <tr>
@@ -123,7 +131,7 @@ onUnmounted(() => {
         </tr>
     </table>
 </div>
-  <div id="map-geo" @click="methods.getGeoLoc">
+  <div id="map-geo" @click="methods.getGeoLoc(false)">
     <img src="https://a.amap.com/jsapi/static/image/plugin/waite.png" v-show="loading">
   </div>
 </template>
@@ -133,7 +141,15 @@ onUnmounted(() => {
   width: 300px;
   height: 300px;
 }
-
+#panel {
+    position: absolute;
+    background-color: white;
+    max-height: 90%;
+    overflow-y: auto;
+    top: 10px;
+    right: 10px;
+    width: 280px;
+}
 #map-geo {
   position: relative;
   bottom: 35px;
